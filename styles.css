@@ -126,9 +126,9 @@ h1 {
 .cell:disabled { cursor: not-allowed; }
 
 .piece {
-  width: 62%;
-  height: 62%;
-  border-radius: 50%;
+  width: 100%;
+  height: 100%;
+  border-radius: 14px;
   background: var(--empty);
   transition: background .25s ease, transform .25s ease, box-shadow .25s ease;
   transform: scale(.6);
