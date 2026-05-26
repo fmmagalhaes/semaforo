@@ -6,6 +6,14 @@ A simple implementation of "Jogo do Semáforo" (Alan Parr's Traffic Lights).
 
 Visit https://fmmagalhaes.github.io/semaforo/
 
+### Online (P2P)
+
+Click **Play online** to host a game. A shareable link is generated — send it to your opponent and they join as the second player.
+
+Connection is established directly between the two browsers via WebRTC ([PeerJS](https://peerjs.com/)) — there is no game server, only PeerJS's public signalling broker to exchange connection details.
+
+Moves and resets are sent over the data channel; both clients run the same game logic locally and stay in sync.
+
 ## AI Disclaimer
 
 Built with AI (Claude Opus 4.7). The first and second commits were generated using the following prompts:

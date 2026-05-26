@@ -24,6 +24,15 @@
 
     <div class="controls">
       <button class="btn" id="reset">New game</button>
+      <button class="btn" id="online">Play online</button>
+    </div>
+
+    <div class="online" id="online-panel" hidden>
+      <div class="online-status" id="online-status">Setting up…</div>
+      <div class="share" id="share" hidden>
+        <input type="text" id="share-link" readonly />
+        <button class="btn" id="copy">Copy</button>
+      </div>
     </div>
 
     <p class="rules">
@@ -37,6 +46,8 @@
 
   </main>
 
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <script src="script.js"></script>
+  <script src="online.js"></script>
 </body>
 </html>
