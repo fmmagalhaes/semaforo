@@ -60,6 +60,7 @@
 
   function updateStatus(winnerLine) {
     turnDot.classList.remove('p2', 'win');
+    resetBtn.disabled = !over;
 
     if (over) {
       if (winnerLine) {
