@@ -26,17 +26,14 @@ Requirements:
 Open in the browser when you're done
 ```
 
-The prompt above yielded a fully working game in under than 1 minute.
-
-The following prompt was then used to improve code readability:
-
 ```
 Separate js, html and css in different files; Improve spacing for code readability
 ```
 
-Which again took less than 1 minute.
+The first prompt yielded a fully working game.
+Each prompt completed in **less than 1 minute.**
 
-Further improvements will not be documented.
+Further prompts will not be documented.
 
 ### Alternative Prompt
 
