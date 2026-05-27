@@ -98,6 +98,15 @@ h1 a { color: inherit; text-decoration: none; }
   box-shadow: 0 0 0 6px rgba(239, 68, 68, .22);
 }
 
+.board-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.board-wrap:has(.play-again:not([hidden])) .board {
+  opacity: .7;
+}
+
 .board {
   display: flex;
   flex-direction: column;
@@ -151,11 +160,56 @@ h1 a { color: inherit; text-decoration: none; }
   box-shadow: inset 0 0 0 3px rgba(255, 255, 255, .85);
 }
 
-.controls {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: center;
+.play-again {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  appearance: none;
+  border: 1px solid #3a4356;
+  background: var(--surface);
+  color: var(--text);
+  padding: 14px 22px;
+  border-radius: 999px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .55);
+  transition: background .15s, border-color .15s, transform .1s;
+}
+
+.play-again:hover  { background: #1d212a; border-color: #4a5468; }
+.play-again:active { transform: translate(-50%, -50%) scale(.96); }
+
+.modes {
+  display: inline-flex;
+  background: var(--surface);
+  border: 1px solid #232833;
+  border-radius: 999px;
+  padding: 4px;
+  box-shadow: var(--shadow);
+}
+
+.mode-btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  padding: 9px 18px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: .9rem;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mode-btn:hover:not(.active) { color: var(--text); }
+.mode-btn.active {
+  background: var(--surface-2);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px #3a4356;
 }
 
 button.btn {
@@ -229,16 +283,8 @@ button.btn:disabled { opacity: .45; cursor: not-allowed; }
 }
 
 /* Compact embed mode (?embed=1): only status + board */
-.embed body {
-  padding: 12px;
-}
-
-.embed .app {
-  gap: 14px;
-}
-
 .embed header,
-.embed .controls,
+.embed .modes,
 .embed .online,
 .embed .rules {
   display: none !important;

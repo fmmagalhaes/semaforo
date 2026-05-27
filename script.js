@@ -7,6 +7,7 @@
   const statusText = document.getElementById('turn-text');
   const turnDot    = document.getElementById('turn-dot');
   const resetBtn   = document.getElementById('reset');
+  const modeBtns   = document.querySelectorAll('.mode-btn');
 
   let grid;
   let player;
@@ -16,7 +17,10 @@
 
   let localPlayer = null;
   let connected   = false;
-  const handlers  = { onLocalMove: null, onLocalReset: null };
+  let mode        = 'pvp'; // 'pvp' | 'pc' | 'online'
+  const handlers  = { onLocalMove: null, onLocalReset: null, onModeChange: null };
+
+  const PC_MOVE_DELAY_MS = 800;
 
   function build() {
     board.innerHTML = '';
@@ -64,11 +68,13 @@
     if (!fromRemote) handlers.onLocalReset && handlers.onLocalReset();
 
     updateStatus();
+
+    if (mode === 'pc' && player === 2) schedulePcMove();
   }
 
   function updateStatus(winnerLine) {
     turnDot.classList.remove('p2', 'win', 'loss');
-    resetBtn.disabled = !over;
+    resetBtn.hidden = !over;
 
     if (over) {
       if (winnerLine) {
@@ -92,16 +98,24 @@
         ? (p === localPlayer ? 'You win!' : 'Opponent wins')
         : `${who} turn`;
     }
+    if (mode === 'pc') {
+      const who = p === 1 ? 'Your' : "PC's";
+      return isWin
+        ? (p === 1 ? 'You win!' : 'PC wins!')
+        : `${who} turn`;
+    }
     return isWin ? `Player ${p} wins!` : `Player ${p}'s turn`;
   }
 
-  function play(r, c, fromRemote) {
+  function play(r, c, fromRemote, fromPc) {
     if (over) return;
     if (grid[r][c] >= 3) return;
     // online mode: ignore clicks on the opponent's turn
     if (!fromRemote && localPlayer && player !== localPlayer) return;
     // online mode: ignore clicks before the data channel is ready (would desync)
     if (!fromRemote && localPlayer && !connected) return;
+    // PC mode: ignore human clicks on the PC's turn
+    if (!fromRemote && !fromPc && mode === 'pc' && player === 2) return;
 
     grid[r][c] += 1;
     const cell = cells[r][c];
@@ -128,6 +142,27 @@
 
     player = player === 1 ? 2 : 1;
     updateStatus();
+
+    if (mode === 'pc' && player === 2 && !over) schedulePcMove();
+  }
+
+  function schedulePcMove() {
+    setTimeout(() => {
+      // bail if state changed during the delay (reset, mode change, human took the turn)
+      if (over || mode !== 'pc' || player !== 2) return;
+      // pick a random non-red cell for the PC's move
+      // any cell with state < 3 is non-red (0=empty, 1=green, 2=yellow, 3=red)
+      const candidates = [];
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          if (grid[r][c] < 3) candidates.push([r, c]);
+        }
+      }
+      if (!candidates.length) return;
+      const [r, c] = candidates[Math.floor(Math.random() * candidates.length)];
+      // fromPc=true so play() bypasses the human-click guard for the PC's turn
+      play(r, c, false, true);
+    }, PC_MOVE_DELAY_MS);
   }
 
   function isFull() {
@@ -166,10 +201,41 @@
     return null;
   }
 
+  function setMode(newMode) {
+    if (newMode === mode) return;
+    const prev = mode;
+    mode = newMode;
+    for (const b of modeBtns) {
+      const active = b.dataset.mode === newMode;
+      b.classList.toggle('active', active);
+      b.setAttribute('aria-selected', active);
+    }
+    handlers.onModeChange && handlers.onModeChange(newMode, prev);
+  }
+
   resetBtn.addEventListener('click', () => reset(false));
+
+  modeBtns.forEach((b) => {
+    b.addEventListener('click', () => {
+      const newMode = b.dataset.mode;
+      if (newMode === mode) return;
+      setMode(newMode);
+      // always clear local state on switch so a finished game doesn't leak its
+      // status ("Draw"/winner) into the new mode's setup screen.
+      // online.js calls startMatch() once paired, which resets again.
+      startingPlayer = 1;
+      reset(false);
+    });
+  });
 
   build();
   reset(true);
+
+  // embed mode (?embed=1): auto-switch to vs PC so the standalone widget is playable solo
+  if (new URLSearchParams(location.search).get('embed') === '1') {
+    setMode('pc');
+    updateStatus();
+  }
 
   window.Game = {
     applyRemoteMove:  (r, c) => play(r, c, true),
@@ -178,6 +244,7 @@
     startMatch:       ()     => { startingPlayer = 1; reset(true); },
     setLocalPlayer:   (p)    => { localPlayer = p; updateStatus(); },
     setConnected:     (b)    => { connected = b; },
+    setMode,
     setHandlers:      (h)    => { Object.assign(handlers, h); },
   };
 })();

@@ -25,11 +25,15 @@
       <span id="turn-text">Player 1's turn</span>
     </div>
 
-    <div class="board" id="board" role="grid" aria-label="Game board"></div>
+    <div class="board-wrap">
+      <div class="board" id="board" role="grid" aria-label="Game board"></div>
+      <button class="play-again" id="reset" hidden>Play again</button>
+    </div>
 
-    <div class="controls">
-      <button class="btn" id="reset">New game</button>
-      <button class="btn" id="online">Play online</button>
+    <div class="modes" role="tablist" aria-label="Game mode">
+      <button class="mode-btn active" data-mode="pvp" role="tab" aria-selected="true">Local PvP</button>
+      <button class="mode-btn" data-mode="pc" role="tab" aria-selected="false">vs PC</button>
+      <button class="mode-btn" data-mode="online" role="tab" aria-selected="false">Online</button>
     </div>
 
     <div class="online" id="online-panel" hidden>
