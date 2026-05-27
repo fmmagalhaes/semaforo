@@ -9,10 +9,7 @@
   const resetBtn   = document.getElementById('reset');
   const modeBtns   = document.querySelectorAll('.mode-btn');
 
-  let grid;
-  let player;
-  let over;
-  let cells;
+  let grid, player, over, cells;
   let startingPlayer = 1;
 
   let localPlayer = null;
@@ -21,6 +18,7 @@
   const handlers  = { onLocalMove: null, onLocalReset: null, onModeChange: null };
 
   const PC_MOVE_DELAY_MS = 800;
+  let pcStartupExtraDelayMs = 0;
 
   function build() {
     board.innerHTML = '';
@@ -78,7 +76,7 @@
 
     if (over) {
       if (winnerLine) {
-        const opponentWon = localPlayer && player !== localPlayer;
+        const opponentWon = mode === 'online' && player !== localPlayer;
         turnDot.classList.add(opponentWon ? 'loss' : 'win');
         statusText.textContent = playerLabel(player, true);
       } else {
@@ -110,12 +108,16 @@
   function play(r, c, fromRemote, fromPc) {
     if (over) return;
     if (grid[r][c] >= 3) return;
-    // online mode: ignore clicks on the opponent's turn
-    if (!fromRemote && localPlayer && player !== localPlayer) return;
-    // online mode: ignore clicks before the data channel is ready (would desync)
-    if (!fromRemote && localPlayer && !connected) return;
-    // PC mode: ignore human clicks on the PC's turn
-    if (!fromRemote && !fromPc && mode === 'pc' && player === 2) return;
+    // local input guards (remote moves and PC scheduler bypass these)
+    if (!fromRemote) {
+      // online: block until the data channel is ready and only on your own turn
+      if (mode === 'online' && (!connected || player !== localPlayer)) return;
+      // PC: block human clicks on the PC's turn
+      if (mode === 'pc' && !fromPc && player === 2) return;
+    }
+
+    // now that we've verified the move is valid, update the state and UI
+    // this may be a local move, a remote move, or a scheduled PC move
 
     grid[r][c] += 1;
     const cell = cells[r][c];
@@ -123,6 +125,7 @@
     cell.classList.add(STATES[grid[r][c]]);
     if (grid[r][c] === 3) cell.disabled = true;
 
+    // online: forward local moves to the peer (no-op in pvp/pc)
     if (!fromRemote) handlers.onLocalMove && handlers.onLocalMove(r, c);
 
     const line = findWin();
@@ -143,10 +146,13 @@
     player = player === 1 ? 2 : 1;
     updateStatus();
 
+    // once the human plays, schedule the PC move
     if (mode === 'pc' && player === 2 && !over) schedulePcMove();
   }
 
   function schedulePcMove() {
+    const delay = PC_MOVE_DELAY_MS + pcStartupExtraDelayMs;
+    pcStartupExtraDelayMs = 0;
     setTimeout(() => {
       // bail if state changed during the delay (reset, mode change, human took the turn)
       if (over || mode !== 'pc' || player !== 2) return;
@@ -159,10 +165,41 @@
         }
       }
       if (!candidates.length) return;
-      const [r, c] = candidates[Math.floor(Math.random() * candidates.length)];
+      // a click always increments the cell regardless of player, so the same cell
+      // that would let the human win next turn is the cell that wins for PC now —
+      // one helper covers both attack and block
+      const winning = findWinningMove(candidates);
+      // otherwise avoid cells that would hand the human a winning move next turn
+      const pool = winning ? [winning] : (safeCandidatesForPcMove(candidates) || candidates);
+      const [r, c] = pool[Math.floor(Math.random() * pool.length)];
       // fromPc=true so play() bypasses the human-click guard for the PC's turn
       play(r, c, false, true);
-    }, PC_MOVE_DELAY_MS);
+    }, delay);
+  }
+
+  function findWinningMove(candidates) {
+    for (const [r, c] of candidates) {
+      grid[r][c] += 1;
+      const win = findWin();
+      grid[r][c] -= 1;
+      if (win) return [r, c];
+    }
+    return null;
+  }
+
+  function safeCandidatesForPcMove(candidates) {
+    // simulate each PC move and drop the ones that leave the human a winning move next turn
+    const safe = candidates.filter(([r, c]) => {
+      grid[r][c] += 1;
+      const next = [];
+      for (let rr = 0; rr < ROWS; rr++)
+        for (let cc = 0; cc < COLS; cc++)
+          if (grid[rr][cc] < 3) next.push([rr, cc]);
+      const opponentWin = findWinningMove(next);
+      grid[r][c] -= 1;
+      return !opponentWin;
+    });
+    return safe.length ? safe : null;
   }
 
   function isFull() {
@@ -229,13 +266,17 @@
   });
 
   build();
-  reset(true);
 
-  // embed mode (?embed=1): auto-switch to vs PC so the standalone widget is playable solo
+  // embed mode (?embed=1): auto-switch to vs PC so the standalone widget is playable solo;
+  // seed PC (player 2) as starter so the board isn't idle waiting for the visitor's first click
   if (new URLSearchParams(location.search).get('embed') === '1') {
     setMode('pc');
-    updateStatus();
+    startingPlayer = 2;
+    // give the visitor a moment to notice the embedded widget before PC plays
+    pcStartupExtraDelayMs = 1000;
   }
+
+  reset(true);
 
   window.Game = {
     applyRemoteMove:  (r, c) => play(r, c, true),
