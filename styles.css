@@ -227,3 +227,19 @@ button.btn:disabled { opacity: .45; cursor: not-allowed; }
   .row          { gap: 10px; }
   .status       { padding: 12px 18px; font-size: 1rem; }
 }
+
+/* Compact embed mode (?embed=1): only status + board */
+.embed body {
+  padding: 12px;
+}
+
+.embed .app {
+  gap: 14px;
+}
+
+.embed header,
+.embed .controls,
+.embed .online,
+.embed .rules {
+  display: none !important;
+}
