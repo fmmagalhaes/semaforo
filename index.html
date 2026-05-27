@@ -26,13 +26,32 @@
     </div>
 
     <div class="board-wrap">
-      <div class="board" id="board" role="grid" aria-label="Game board"></div>
+      <div class="board" id="board" role="grid" aria-label="Game board">
+        <div class="row">
+          <button class="cell" role="gridcell" aria-label="Row 1 column 1"><span class="piece"></span></button>
+          <button class="cell" role="gridcell" aria-label="Row 1 column 2"><span class="piece"></span></button>
+          <button class="cell" role="gridcell" aria-label="Row 1 column 3"><span class="piece"></span></button>
+          <button class="cell" role="gridcell" aria-label="Row 1 column 4"><span class="piece"></span></button>
+        </div>
+        <div class="row">
+          <button class="cell" role="gridcell" aria-label="Row 2 column 1"><span class="piece"></span></button>
+          <button class="cell" role="gridcell" aria-label="Row 2 column 2"><span class="piece"></span></button>
+          <button class="cell" role="gridcell" aria-label="Row 2 column 3"><span class="piece"></span></button>
+          <button class="cell" role="gridcell" aria-label="Row 2 column 4"><span class="piece"></span></button>
+        </div>
+        <div class="row">
+          <button class="cell" role="gridcell" aria-label="Row 3 column 1"><span class="piece"></span></button>
+          <button class="cell" role="gridcell" aria-label="Row 3 column 2"><span class="piece"></span></button>
+          <button class="cell" role="gridcell" aria-label="Row 3 column 3"><span class="piece"></span></button>
+          <button class="cell" role="gridcell" aria-label="Row 3 column 4"><span class="piece"></span></button>
+        </div>
+      </div>
       <button class="play-again" id="reset" hidden>Play again</button>
     </div>
 
     <div class="modes" role="tablist" aria-label="Game mode">
-      <button class="mode-btn active" data-mode="pvp" role="tab" aria-selected="true">Local PvP</button>
-      <button class="mode-btn" data-mode="pc" role="tab" aria-selected="false">vs PC</button>
+      <button class="mode-btn" data-mode="pvp" role="tab" aria-selected="false">Local PvP</button>
+      <button class="mode-btn active" data-mode="pc" role="tab" aria-selected="true">vs PC</button>
       <button class="mode-btn" data-mode="online" role="tab" aria-selected="false">Online</button>
     </div>
 
@@ -50,7 +69,7 @@
       <strong style="color:var(--yellow)">yellow</strong> →
       <strong style="color:var(--red)">red</strong>.
       <br>
-      Make three of the same colour in a row, column, or diagonal to win.
+      Make three of the same colour in a row, column, or diagonal.
     </p>
 
   </main>

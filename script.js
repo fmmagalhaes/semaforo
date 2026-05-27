@@ -14,40 +14,25 @@
 
   let localPlayer = null;
   let connected   = false;
-  let mode        = 'pvp'; // 'pvp' | 'pc' | 'online'
+  let mode        = 'pc'; // 'pvp' | 'pc' | 'online'
   const handlers  = { onLocalMove: null, onLocalReset: null, onModeChange: null };
 
   const PC_MOVE_DELAY_MS = 800;
   let pcStartupExtraDelayMs = 0;
 
   function build() {
-    board.innerHTML = '';
+    // cells are rendered in HTML so first paint has the correct layout;
+    // here we just wire up the 2D array and click handlers.
     cells = [];
-
-    for (let r = 0; r < ROWS; r++) {
-      const row = document.createElement('div');
-      row.className = 'row';
+    const rows = board.querySelectorAll('.row');
+    rows.forEach((row, r) => {
       const rowCells = [];
-
-      for (let c = 0; c < COLS; c++) {
-        const btn = document.createElement('button');
-        btn.className = 'cell';
-        btn.setAttribute('role', 'gridcell');
-        btn.setAttribute('aria-label', `Row ${r + 1} column ${c + 1}`);
-
-        const piece = document.createElement('span');
-        piece.className = 'piece';
-        btn.appendChild(piece);
-
+      row.querySelectorAll('.cell').forEach((btn, c) => {
         btn.addEventListener('click', () => play(r, c));
-
-        row.appendChild(btn);
         rowCells.push(btn);
-      }
-
-      board.appendChild(row);
+      });
       cells.push(rowCells);
-    }
+    });
   }
 
   function reset(fromRemote) {
@@ -76,7 +61,8 @@
 
     if (over) {
       if (winnerLine) {
-        const opponentWon = mode === 'online' && player !== localPlayer;
+        const opponentWon = (mode === 'online' && player !== localPlayer)
+                         || (mode === 'pc' && player === 2);
         turnDot.classList.add(opponentWon ? 'loss' : 'win');
         statusText.textContent = playerLabel(player, true);
       } else {
@@ -268,7 +254,9 @@
   build();
 
   // embed mode (?embed=1): auto-switch to vs PC so the standalone widget is playable solo;
-  // seed PC (player 2) as starter so the board isn't idle waiting for the visitor's first click
+  // seed PC (player 2) as starter so the board isn't idle waiting for the visitor's first click.
+  // setMode('pc') is a no-op since 'pc' is the default mode, but kept intentionally so embed
+  // behavior stays correct if the default is ever changed.
   if (new URLSearchParams(location.search).get('embed') === '1') {
     setMode('pc');
     startingPlayer = 2;
